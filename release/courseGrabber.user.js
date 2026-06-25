@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         自动抢课脚本
 // @namespace    https://github.com/rinbowtan-oss/auto-course-grabber
-// @version      2.3.2
+// @version      1.0.0
 // @description  支持多课程并发抢课、时间教师过滤、定时开抢、换课功能，配备图形化操作界面
 // @author       rinbowtan-oss
 // @match        *://xsxk.nuist.edu.cn/*
@@ -1636,6 +1636,8 @@
     _win._cgAddFromScan = cgAddFromScan;
     // 让 cgAddFromScan 跨上下文调用时也能刷新课程列表
     _win._updateCourseList = () => updateCourseList();
+
+    /* 气专专用 https://github.com/rinbowtan-oss/auto-course-grabber */
 
     // 显示脚本信息
     console.log('%c🎓 自动抢课脚本已加载 - 多课程并发版', 'color: #ff6b35; font-size: 18px; font-weight: bold;');
