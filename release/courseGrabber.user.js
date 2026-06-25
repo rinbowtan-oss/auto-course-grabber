@@ -1900,9 +1900,18 @@
                 justify-content: space-between;
                 align-items: center;
                 transition: all 0.3s;
+                cursor: grab;
             }
             .cg-course-item:hover {
                 background: rgba(255,255,255,0.15);
+            }
+            .cg-course-item.cg-dragging {
+                opacity: 0.4;
+                cursor: grabbing;
+            }
+            .cg-course-item.cg-drag-over {
+                border: 2px dashed rgba(56,249,215,0.7);
+                background: rgba(56,249,215,0.1);
             }
             .cg-course-info {
                 flex: 1;
@@ -2472,7 +2481,7 @@
             }
 
             return `
-                <div class="cg-course-item">
+                <div class="cg-course-item" draggable="true" data-index="${index}">
                     <div class="cg-course-info">
                         <div class="cg-course-code">${course.code} <span class="cg-badge">优先级: ${course.priority}</span></div>
                         ${filterHTML}
@@ -2484,6 +2493,41 @@
                 </div>
             `;
         }).join('');
+
+        // 绑定拖拽排序事件
+        let dragSrcIndex = null;
+        list.querySelectorAll('.cg-course-item').forEach(item => {
+            item.addEventListener('dragstart', e => {
+                dragSrcIndex = parseInt(item.dataset.index);
+                item.classList.add('cg-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('cg-dragging');
+                list.querySelectorAll('.cg-course-item').forEach(i => i.classList.remove('cg-drag-over'));
+            });
+            item.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                list.querySelectorAll('.cg-course-item').forEach(i => i.classList.remove('cg-drag-over'));
+                item.classList.add('cg-drag-over');
+            });
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('cg-drag-over');
+            });
+            item.addEventListener('drop', e => {
+                e.preventDefault();
+                const dropIndex = parseInt(item.dataset.index);
+                if (dragSrcIndex === null || dragSrcIndex === dropIndex) return;
+                // 重排数组
+                const moved = TARGET_COURSES.splice(dragSrcIndex, 1)[0];
+                TARGET_COURSES.splice(dropIndex, 0, moved);
+                // 重新分配优先级
+                TARGET_COURSES.forEach((c, i) => { c.priority = i + 1; });
+                document.dispatchEvent(new CustomEvent('cg-refresh-list'));
+                addUILog('info', `已调整课程顺序：${moved.code} → 优先级 ${dropIndex + 1}`);
+            });
+        });
     }
 
     // 删除课程（UI调用）
