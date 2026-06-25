@@ -1,4 +1,4 @@
-# 🎓 教务系统自动抢课脚本
+# 🎓 教务系统自动分忧脚本
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
