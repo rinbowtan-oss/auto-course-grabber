@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         自动抢课脚本
+// @name         选课分忧助手
 // @namespace    https://github.com/rinbowtan-oss/auto-course-grabber
 // @version      1.0.0
-// @description  支持多课程并发抢课、时间教师过滤、定时开抢、换课功能，配备图形化操作界面
+// @description  支持多课程并发选课、时间教师过滤、定时分忧、换课功能，配备图形化操作界面
 // @author       rinbowtan-oss
 // @match        *://xsxk.nuist.edu.cn/*
 // @match        *://*/jwglxt/xsxk/*
@@ -18,9 +18,9 @@
 // 1. 登录教务系统并进入选课页面
 // 2. 配置目标课程列表 TARGET_COURSES（现在已经支持UI界面，所以在UI界面上配置也没事）
 // 3. 按F12打开控制台，粘贴此脚本并执行
-// 4. 输入 grab.start() 开始抢课
+// 4. 输入 grab.start() 开始分忧
 
-// 注意!!! 目标课程得在页面中出现（可以在不是选课时间到目标课程展示的页面并打开定时开抢功能、教学班卡片信息本脚本已经自动实现展开所以不重要），DOM树一定得展开否则无法找到 !!!
+// 注意!!! 目标课程得在页面中出现（可以在不是选课时间到目标课程展示的页面并打开定时分忧功能、教学班卡片信息本脚本已经自动实现展开所以不重要），DOM树一定得展开否则无法找到 !!!
 
 (function () {
     // ========= 防止重复粘贴/重复执行 =========
@@ -38,7 +38,7 @@
         } catch (e) {
             // 忽略停止失败
         }
-        console.warn('[抢课脚本] 检测到脚本已加载过一次：已尝试停止旧实例，并将覆盖为新实例。');
+        console.warn('[分忧助手] 检测到脚本已加载过一次：已尝试停止旧实例，并将覆盖为新实例。');
     }
 
     __CG_GLOBAL__[__CG_LOADED_KEY__] = true;
@@ -50,7 +50,7 @@
     const _win = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     // ========== 配置参数 ==========
-    // 支持多门课程同时抢课，格式: [{code: '课程号或课程名称', priority: 优先级, timeFilter: 时间过滤, teacherFilter: 教师过滤}]
+    // 支持多门课程同时选课，格式: [{code: '课程号或课程名称', priority: 优先级, timeFilter: 时间过滤, teacherFilter: 教师过滤}]
     // code 字段支持两种输入方式：
     //   1. 课程号（纯数字）：如 '23286514'
     //   2. 课程名称（包含中文）：如 '机器学习'、'计算机控制'
@@ -67,7 +67,7 @@
     const MAX_ATTEMPTS = 3000;              // 最大尝试次数
     const MAX_FAILED_ATTEMPTS = 10;          // 最大连续失败次数
     const RETRY_DELAY = 3000;               // 重试延迟(毫秒)
-    const CONCURRENT_ENABLED = true;        // 是否启用并发抢课
+    const CONCURRENT_ENABLED = true;        // 是否启用并发选课
     const CLICK2EXPEND_ENABLED = true;     // 用户设置: 是否在 jQuery 后自动展开目标课程信息，用于时间筛选和教师筛选
 
     let click2expend_enabled = true;       // 用于脚本自动关闭
@@ -86,7 +86,7 @@
     let isRunning = false;
     let intervalId = null;
     let refreshInProgress = false;          // 避免刷新分支在 attemptCount 未变化时被重复触发
-    let refreshTimeoutId = null;            // 刷新后延迟抢课的 timeout
+    let refreshTimeoutId = null;            // 刷新后延迟分忧的 timeout
 
     // 多课程状态管理
     let courseStates = new Map();           // 每门课程的状态: {courseCode: {attempts, failed, tried, conflicted, selecting, success}}
@@ -97,7 +97,7 @@
     let selectingQueue = [];                // 正在处理的选课任务队列
     let isProcessingQueue = false;          // 是否正在处理队列
 
-    // 定时开抢相关
+    // 定时分忧相关
     let scheduledTime = null;               // 计划开抢时间
     let schedulerIntervalId = null;         // 定时器ID
     let isScheduled = false;                // 是否已设置定时
@@ -240,7 +240,7 @@
     function log(message, type = 'info', courseCode = null) {
         const timestamp = new Date().toLocaleTimeString();
         const courseTag = courseCode ? `[${courseCode}]` : '';
-        const prefix = `[抢课脚本 ${timestamp}]${courseTag}`;
+        const prefix = `[分忧助手 ${timestamp}]${courseTag}`;
 
         switch (type) {
             case 'success':
@@ -954,12 +954,12 @@
                                             try {
                                                 if (typeof GM_notification !== 'undefined') {
                                                     GM_notification({
-                                                        title: '抢课成功！',
+                                                        title: '选课成功！',
                                                         text: `成功选择: ${courseCode} - ${teachingClass.info.className}`,
                                                         timeout: 5000
                                                     });
                                                 } else if (window.Notification && Notification.permission === 'granted') {
-                                                    new Notification('抢课成功！', {
+                                                    new Notification('选课成功！', {
                                                         body: `成功选择: ${courseCode} - ${teachingClass.info.className}`,
                                                         icon: '/favicon.ico'
                                                     });
@@ -967,7 +967,7 @@
 
                                                 // 检查是否所有课程都已完成
                                                 if (activeCourses.size === 0) {
-                                                    alert(`🎉 所有课程抢课完成！\n成功课程: ${Array.from(selectedCourses).join(', ')}`);
+                                                    alert(`🎉 所有课程选课完成！\n成功课程: ${Array.from(selectedCourses).join(', ')}`);
                                                     stopGrabbing();
                                                 }
                                             } catch (e) {
@@ -979,12 +979,12 @@
                                             log(`⚠️ 选课请求已发送但未确认成功 (失败次数: ${state.failed}/${MAX_FAILED_ATTEMPTS})`, 'warning', courseCode);
 
                                             if (state.failed >= MAX_FAILED_ATTEMPTS) {
-                                                log(`❌ 课程 ${courseCode} 连续失败 ${MAX_FAILED_ATTEMPTS} 次，停止该课程抢课`, 'error', courseCode);
+                                                log(`❌ 课程 ${courseCode} 连续失败 ${MAX_FAILED_ATTEMPTS} 次，停止该课程选课`, 'error', courseCode);
                                                 activeCourses.delete(courseCode);
 
                                                 // 检查是否所有课程都已完成
                                                 if (activeCourses.size === 0 && selectedCourses.size === 0) {
-                                                    alert(`抢课脚本已停止\n原因: 所有课程都无法选课成功\n建议: 检查网络连接或手动刷新页面后重试`);
+                                                    alert(`分忧助手已停止\n原因: 所有课程都无法选课成功\n建议: 检查网络连接或手动刷新页面后重试`);
                                                     stopGrabbing();
                                                 }
                                             }
@@ -1047,7 +1047,7 @@
         }
     }
 
-    // 单个课程抢课逻辑
+    // 单个课程分忧逻辑
     function attemptGrabSingleCourse(courseCode) {
         const state = getCourseState(courseCode);
 
@@ -1153,7 +1153,7 @@
                     dropCourse(courseConfig.replaceCode).then(dropSuccess => {
                         if (dropSuccess) {
                             log(`✅ 退选成功，立即选择新课程 ${courseCode}`, 'success', courseCode);
-                            addUILog && addUILog('success', `[${courseCode}] ✅ 退选成功，开始抢课...`);
+                            addUILog && addUILog('success', `[${courseCode}] ✅ 退选成功，开始分忧...`);
 
                             // 等待页面更新后立即选课
                             setTimeout(() => {
@@ -1170,7 +1170,7 @@
                     // 没有配置替换课程，直接选课
                     const selectResult = selectTeachingClass(tc);
                     if (selectResult) {
-                        return; // 尝试抢课后等待结果
+                        return; // 尝试分忧后等待结果
                     }
                 }
             } else {
@@ -1181,7 +1181,7 @@
 
         // 检查是否所有教学班都时间冲突
         if (!hasNonConflictedFullClass && state.conflicted.size > 0 && state.conflicted.size === teachingClasses.length) {
-            log('🛑 所有教学班都存在时间冲突，停止该课程抢课！', 'error', courseCode);
+            log('🛑 所有教学班都存在时间冲突，停止该课程选课！', 'error', courseCode);
             activeCourses.delete(courseCode);
 
             if (activeCourses.size === 0) {
@@ -1198,12 +1198,12 @@
         }
     }
 
-    // 主抢课逻辑（多课程并发版）
+    // 主分忧逻辑（多课程并发版）
     function attemptGrabCourse() {
         attemptCount++;
 
         if (attemptCount > MAX_ATTEMPTS) {
-            log(`已达到最大尝试次数 ${MAX_ATTEMPTS}，停止抢课`, 'warning');
+            log(`已达到最大尝试次数 ${MAX_ATTEMPTS}，停止分忧`, 'warning');
             stopGrabbing();
             return;
         }
@@ -1214,7 +1214,7 @@
             return;
         }
 
-        log(`第 ${attemptCount} 次尝试抢课 (活跃课程: ${activeCourses.size})`);
+        log(`第 ${attemptCount} 次尝试分忧 (活跃课程: ${activeCourses.size})`);
 
         // 按优先级排序课程
         const sortedCourses = Array.from(activeCourses).sort((a, b) => {
@@ -1242,10 +1242,10 @@
         }
     }
 
-    // 开始抢课
+    // 开始分忧
     function startGrabbing(customCourses = null) {
         if (isRunning) {
-            log('抢课脚本已在运行中！', 'warning');
+            log('分忧助手已在运行中！', 'warning');
             return;
         }
 
@@ -1266,7 +1266,7 @@
         isRunning = true;
         attemptCount = 0;
         refreshInProgress = false;
-        addUILog && addUILog('info', `🚀 开始抢课，共 ${coursesToGrab.length} 门课程`);
+        addUILog && addUILog('info', `🚀 开始分忧，共 ${coursesToGrab.length} 门课程`);
         if (refreshTimeoutId) {
             clearTimeout(refreshTimeoutId);
             refreshTimeoutId = null;
@@ -1360,16 +1360,16 @@
         }, CHECK_INTERVAL);
     }
 
-    // 停止抢课
+    // 停止分忧
     function stopGrabbing() {
         if (!isRunning) {
-            log('抢课脚本未运行', 'info');
+            log('分忧助手未运行', 'info');
             return;
         }
 
         isRunning = false;
         refreshInProgress = false;
-        addUILog && addUILog('warning', '⏹️ 抢课脚本已停止');
+        addUILog && addUILog('warning', '⏹️ 分忧助手已停止');
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
@@ -1379,7 +1379,7 @@
             refreshTimeoutId = null;
         }
 
-        log('⏹️ 抢课脚本已停止', 'warning');
+        log('⏹️ 分忧助手已停止', 'warning');
     }
 
     // 获取状态
@@ -1394,7 +1394,7 @@
             concurrentMode: CONCURRENT_ENABLED
         };
 
-        console.log('%c========== 抢课状态 ==========', 'color: #00ffff; font-weight: bold; font-size: 16px;');
+        console.log('%c========== 分忧状态 ==========', 'color: #00ffff; font-weight: bold; font-size: 16px;');
         console.table(status);
 
         // 显示每门课程的详细状态
@@ -1459,11 +1459,11 @@
 
     // 暴露全局控制接口
     _win.grab = {
-        // 开始抢课 - 可以传入自定义课程列表
+        // 开始分忧 - 可以传入自定义课程列表
         // 示例: grab.start([{code: 'CS101', priority: 1}, {code: 'CS102', priority: 2}])
         start: startGrabbing,
 
-        // 停止抢课
+        // 停止分忧
         stop: stopGrabbing,
 
         // 查看状态
@@ -1574,7 +1574,7 @@
             return debugInfo;
         },
 
-        // 定时开抢
+        // 定时分忧
         schedule: (timeString) => {
             const targetTime = new Date(timeString);
             if (isNaN(targetTime.getTime())) {
@@ -1638,15 +1638,15 @@
     _win._updateCourseList = () => updateCourseList();
 
     /* 气专专用 https://github.com/rinbowtan-oss/auto-course-grabber */
-
+               https://xsxk.nuist.edu.cn/xsxk/profile/index.html
     // 显示脚本信息
-    console.log('%c🎓 自动抢课脚本已加载 - 多课程并发版', 'color: #ff6b35; font-size: 18px; font-weight: bold;');
-    console.log('%c✨ 新特性: 支持多门课程同时抢课！', 'color: #00ff00; font-size: 16px; font-weight: bold;');
+    console.log('%c🎓 选课分忧助手已加载 - 多课程并发版', 'color: #ff6b35; font-size: 18px; font-weight: bold;');
+    console.log('%c✨ 新特性: 支持多门课程同时选课！', 'color: #00ff00; font-size: 16px; font-weight: bold;');
     console.log('%c📚 目标课程数: ' + TARGET_COURSES.length, 'color: #4ecdc4; font-size: 14px; font-weight: bold;');
     console.log('%c⚡ 使用方法:', 'color: #45b7d1; font-size: 14px; font-weight: bold;');
-    console.log('  grab.start()  - 🚀 开始抢课（使用配置的课程）');
+    console.log('  grab.start()  - 🚀 开始分忧（使用配置的课程）');
     console.log('  grab.start([{code:"CS101", priority:1}])  - 🚀 使用自定义课程列表');
-    console.log('  grab.stop()   - ⏹️ 停止抢课');
+    console.log('  grab.stop()   - ⏹️ 停止分忧');
     console.log('  grab.status() - 📊 查看状态');
     console.log('  grab.debug()  - 🔍 调试所有课程');
     console.log('  grab.debug("CS101")  - 🔍 调试指定课程');
@@ -1654,7 +1654,7 @@
     console.log('  grab.removeCourse("CS101")  - ➖ 移除课程');
     console.log('%c⚠️ 提醒: 确保您在正确的选课页面且已登录！', 'color: #ffa500; font-weight: bold;');
     console.log('%c🛡️ 智能保护:', 'color: #ff69b4; font-weight: bold;');
-    console.log('  • 多课程并发抢课（可配置）');
+    console.log('  • 多课程并发选课（可配置）');
     console.log('  • 优先级控制（数字越小优先级越高）');
     console.log('  • 自动识别同一课程的多个教学班');
     console.log('  • 时间冲突时自动尝试其他教学班');
@@ -2138,7 +2138,7 @@
             <div class="cg-header">
                 <div class="cg-title">
                     <span>🎓</span>
-                    <span>自动抢课</span>
+                    <span>选课分忧助手</span>
                 </div>
                 <div class="cg-controls">
                     <button class="cg-minimize" id="cg-minimize-btn" title="最小化">−</button>
@@ -2172,21 +2172,21 @@
                     <div class="cg-course-list" id="cg-course-list"></div>
                 </div>
 
-                <!-- 定时开抢 -->
+                <!-- 定时分忧 -->
                 <div class="cg-section">
-                    <div class="cg-section-title">⏰ 定时开抢</div>
+                    <div class="cg-section-title">⏰ 定时分忧</div>
                     <div class="cg-time-input-group">
                         <input type="datetime-local" class="cg-input" id="cg-schedule-time" placeholder="选择开抢时间">
                         <button class="cg-btn cg-btn-secondary cg-btn-small" id="cg-schedule-btn">确定</button>
                     </div>
-                    <div class="cg-help-text">设置自动开抢时间，到时自动开始抢课</div>
+                    <div class="cg-help-text">设置自动开抢时间，到时自动开始分忧</div>
                     <div id="cg-timer-display" style="display: none;"></div>
                 </div>
 
                 <!-- 控制按钮 -->
                 <div class="cg-section">
                     <div class="cg-btn-group">
-                        <button class="cg-btn cg-btn-primary" id="cg-start-btn" style="flex: 1;">🚀 开始抢课</button>
+                        <button class="cg-btn cg-btn-primary" id="cg-start-btn" style="flex: 1;">🚀 开始分忧</button>
                         <button class="cg-btn cg-btn-danger" id="cg-stop-btn" style="flex: 1;" disabled>⏹️ 停止</button>
                     </div>
                     <div class="cg-btn-group">
@@ -2314,7 +2314,7 @@
             btn.textContent = ui.classList.contains('cg-minimized') ? '□' : '−';
         };
 
-        // 开始抢课
+        // 开始分忧
         document.getElementById('cg-start-btn').onclick = () => {
             if (TARGET_COURSES.length === 0) {
                 alert('请先添加至少一门课程！');
@@ -2327,7 +2327,7 @@
             updateStatusDisplay();
         };
 
-        // 停止抢课
+        // 停止分忧
         document.getElementById('cg-stop-btn').onclick = () => {
             grab.stop();
             document.getElementById('cg-start-btn').disabled = false;
@@ -2345,7 +2345,7 @@
             grab.debug();
         };
 
-        // 定时开抢
+        // 定时分忧
         document.getElementById('cg-schedule-btn').onclick = () => {
             const timeInput = document.getElementById('cg-schedule-time');
             const timeValue = timeInput.value;
@@ -2380,7 +2380,7 @@
             const container = document.getElementById('cg-scan-results');
 
             const itemCount = document.querySelectorAll('.el-collapse-item').length;
-            console.log('[抢课脚本] 扫描触发，找到 el-collapse-item:', itemCount);
+            console.log('[分忧助手] 扫描触发，找到 el-collapse-item:', itemCount);
 
             // 防重复点击
             btn.disabled = true;
@@ -2651,7 +2651,7 @@
         };
     }
 
-    // 设置定时开抢
+    // 设置定时分忧
     function setScheduledStart(targetTime) {
         // 取消之前的定时器
         if (schedulerIntervalId) {
@@ -2671,8 +2671,8 @@
         document.getElementById('cg-schedule-btn').textContent = '❌ 取消';
         document.getElementById('cg-schedule-btn').onclick = cancelScheduledStart;
 
-        addUILog('info', `已设置定时开抢: ${targetTime.toLocaleString()}`);
-        log(`⏰ 定时开抢已设置，将在 ${targetTime.toLocaleString()} 自动开始`, 'success');
+        addUILog('info', `已设置定时分忧: ${targetTime.toLocaleString()}`);
+        log(`⏰ 定时分忧已设置，将在 ${targetTime.toLocaleString()} 自动开始`, 'success');
 
         // 启动倒计时
         schedulerIntervalId = setInterval(() => {
@@ -2680,19 +2680,19 @@
             const diff = scheduledTime - now;
 
             if (diff <= 0) {
-                // 时间到，开始抢课
+                // 时间到，开始分忧
                 clearInterval(schedulerIntervalId);
                 isScheduled = false;
                 timerDisplay.style.display = 'none';
 
-                addUILog('success', '⏰ 定时时间已到，开始抢课！');
-                log('⏰ 定时时间已到，自动开始抢课！', 'success');
+                addUILog('success', '⏰ 定时时间已到，开始分忧！');
+                log('⏰ 定时时间已到，自动开始分忧！', 'success');
 
                 // 重置按钮
                 document.getElementById('cg-schedule-btn').textContent = '⏰ 设置';
                 document.getElementById('cg-schedule-btn').onclick = document.getElementById('cg-schedule-btn').onclick;
 
-                // 开始抢课
+                // 开始分忧
                 grab.start();
                 document.getElementById('cg-start-btn').disabled = true;
                 document.getElementById('cg-stop-btn').disabled = false;
@@ -2703,7 +2703,7 @@
         }, 100);
     }
 
-    // 取消定时开抢
+    // 取消定时分忧
     function cancelScheduledStart() {
         if (schedulerIntervalId) {
             clearInterval(schedulerIntervalId);
@@ -2745,8 +2745,8 @@
             setScheduledStart(scheduleTime);
         };
 
-        addUILog('warning', '已取消定时开抢');
-        log('⏰ 定时开抢已取消', 'warning');
+        addUILog('warning', '已取消定时分忧');
+        log('⏰ 定时分忧已取消', 'warning');
     }
 
     // 更新倒计时显示
