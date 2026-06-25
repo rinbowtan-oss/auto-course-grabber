@@ -1342,6 +1342,19 @@
 
         // 设置定时器
         intervalId = setInterval(() => {
+            // 登录过期检测：URL 已离开选课页 或 出现登录表单
+            if (isSessionExpired()) {
+                log('⚠️ 检测到登录已过期，自动暂停抢课', 'error');
+                addUILog && addUILog('error', '⚠️ 登录已过期！请重新登录后手动恢复抢课');
+                stopGrabbing();
+                // 尝试更新UI按钮状态
+                const startBtn = document.getElementById('cg-start-btn');
+                const stopBtn  = document.getElementById('cg-stop-btn');
+                if (startBtn) startBtn.disabled = false;
+                if (stopBtn)  stopBtn.disabled  = true;
+                return;
+            }
+
             // 每8次尝试刷新一次课程列表
             // 注意：attemptCount 在 attemptGrabCourse() 内部自增；如果这里先走“刷新分支”，
             // attemptGrabCourse() 会被延迟 1s，这段时间内 attemptCount 不变，会导致下一次 interval 再次满足 %8===0，
@@ -1358,6 +1371,19 @@
                 attemptGrabCourse();
             }
         }, CHECK_INTERVAL);
+    }
+
+    // 检测登录是否过期
+    function isSessionExpired() {
+        const url = location.href.toLowerCase();
+        // URL 跳到了登录相关页面
+        const loginKeywords = ['login', 'sso', 'cas', 'xtgl/login', 'xtgl/index'];
+        if (loginKeywords.some(k => url.includes(k))) return true;
+        // 页面出现了登录输入框
+        if (document.querySelector('input[type="password"]')) return true;
+        // 页面标题包含"登录"
+        if (document.title.includes('登录')) return true;
+        return false;
     }
 
     // 停止抢课
