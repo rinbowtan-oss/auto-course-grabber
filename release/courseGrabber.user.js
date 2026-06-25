@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         自动抢课脚本（正方选课系统）
-// @namespace    https://github.com/ceilf6/Auto_courseGrabber
+// @name         自动抢课脚本
+// @namespace    https://github.com/rinbowtan-oss/auto-course-grabber
 // @version      2.3.2
 // @description  支持多课程并发抢课、时间教师过滤、定时开抢、换课功能，配备图形化操作界面
-// @author       ceilf6
+// @author       rinbowtan-oss
 // @match        *://xsxk.nuist.edu.cn/*
 // @match        *://*/jwglxt/xsxk/*
 // @grant        GM_notification
@@ -12,9 +12,7 @@
 // @license      MIT
 // ==/UserScript==
 
-// 仓库地址（持续维护、更新中）: https://github.com/ceilf6/Auto_courseGrabber
-// https://github.com/ceilf6
-// https://blog.csdn.net/2301_78856868
+// 仓库地址（持续维护、更新中）: https://github.com/rinbowtan-oss/auto-course-grabber
 
 // 使用方法:
 // 1. 登录教务系统并进入选课页面
